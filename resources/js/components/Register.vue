@@ -4,15 +4,19 @@
     <form @submit.prevent="register">
       <div>
         <label for="name">Name:</label>
-        <input type="text" v-model="name" required />
+        <input type="text" v-model="name" required>
       </div>
       <div>
         <label for="email">Email:</label>
-        <input type="email" v-model="email" required />
+        <input type="email" v-model="email" required>
       </div>
       <div>
         <label for="password">Password:</label>
-        <input type="password" v-model="password" required />
+        <input type="password" v-model="password" required>
+      </div>
+      <div>
+        <label for="password_confirmation">Confirm Password:</label>
+        <input type="password" v-model="password_confirmation" required>
       </div>
       <button type="submit">Register</button>
     </form>
@@ -27,24 +31,29 @@ export default {
     return {
       name: '',
       email: '',
-      password: ''
+      password: '',
+      password_confirmation: ''
     };
   },
   methods: {
-    register() {
-      axios.post('/api/register', {
-        name: this.name,
-        email: this.email,
-        password: this.password
-      })
-      .then(response => {
+    async register() {
+      try {
+        const response = await axios.post('/api/register', {
+          name: this.name,
+          email: this.email,
+          password: this.password,
+          password_confirmation: this.password_confirmation
+        });
         localStorage.setItem('token', response.data.access_token);
         this.$router.push('/');
-      })
-      .catch(error => {
-        console.error(error);
-      });
+      } catch (error) {
+        console.error('Registration failed:', error.response.data);
+      }
     }
   }
-}
+};
 </script>
+
+<style>
+/* Add styles if needed */
+</style>

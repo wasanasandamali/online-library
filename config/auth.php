@@ -70,7 +70,15 @@ return [
         //     'table' => 'users',
         // ],
     ],
-
+'web' => [
+        'driver' => 'sanctum',
+        'provider' => 'users',
+    ],
+    'api' => [
+        'driver' => 'token',
+        'provider' => 'users',
+        'hash' => false,
+    ],
     /*
     |--------------------------------------------------------------------------
     | Resetting Passwords

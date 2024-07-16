@@ -9,10 +9,11 @@ class Book extends Model
 {
     use HasFactory;
 
-    // Define the table associated with the model (if different from the pluralized model name)
-    // protected $table = 'books';
-
-    // Specify which attributes are mass assignable
+    /**
+     * The attributes that are mass assignable.
+     *
+     * @var array<int, string>
+     */
     protected $fillable = [
         'title',
         'description',
@@ -20,13 +21,17 @@ class Book extends Model
         'price',
     ];
 
-    // Optionally, specify which attributes should be hidden for arrays (like sensitive data)
-    // protected $hidden = [
-    //     'created_at', 'updated_at',
-    // ];
+    // If you have relationships, you can define them here
+    // For example, if a book belongs to an author:
+    // public function author()
+    // {
+    //     return $this->belongsTo(Author::class);
+    // }
 
-    // Optionally, specify the attributes that should be cast to native types
-    protected $casts = [
-        'price' => 'decimal:2',
-    ];
+    // If a book has many reviews:
+    // public function reviews()
+    // {
+    //     return $this->hasMany(Review::class);
+    // }
 }
+

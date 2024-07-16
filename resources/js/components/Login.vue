@@ -1,17 +1,11 @@
 <template>
   <div>
-    <h1>Login</h1>
     <form @submit.prevent="login">
-      <div>
-        <label for="email">Email:</label>
-        <input type="email" v-model="email" required />
-      </div>
-      <div>
-        <label for="password">Password:</label>
-        <input type="password" v-model="password" required />
-      </div>
+      <input v-model="email" type="email" placeholder="Email" required />
+      <input v-model="password" type="password" placeholder="Password" required />
       <button type="submit">Login</button>
     </form>
+    <p v-if="errorMessage">{{ errorMessage }}</p>
   </div>
 </template>
 
@@ -22,23 +16,23 @@ export default {
   data() {
     return {
       email: '',
-      password: ''
+      password: '',
+      errorMessage: ''
     };
   },
   methods: {
-    login() {
-      axios.post('/api/login', {
-        email: this.email,
-        password: this.password
-      })
-      .then(response => {
+    async login() {
+      try {
+        const response = await axios.post('/api/login', {
+          email: this.email,
+          password: this.password
+        });
         localStorage.setItem('token', response.data.access_token);
         this.$router.push('/');
-      })
-      .catch(error => {
-        console.error(error);
-      });
+      } catch (error) {
+        this.errorMessage = error.response.data.message || 'Login failed';
+      }
     }
   }
-}
+};
 </script>

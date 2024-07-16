@@ -2,26 +2,32 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\ValidationException;
-use Laravel\Sanctum\HasApiTokens;
+use Illuminate\Support\Facades\Validator;
+use App\Models\User;
+use Illuminate\Support\Facades\Auth;
+use Laravel\Sanctum\PersonalAccessToken;
 
 class AuthController extends Controller
 {
-    use HasApiTokens;
-
     /**
      * Register a new user.
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
      */
     public function register(Request $request)
     {
-        $request->validate([
+        $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
-            'password' => 'required|string|min:8',
+            'password' => 'required|string|min:8|confirmed',
         ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
 
         $user = User::create([
             'name' => $request->name,
@@ -29,42 +35,51 @@ class AuthController extends Controller
             'password' => Hash::make($request->password),
         ]);
 
-        // Create and return the user's token
-        $token = $user->createToken('auth_token')->plainTextToken;
+        $token = $user->createToken('Personal Access Token')->plainTextToken;
 
-        return response()->json(['access_token' => $token, 'token_type' => 'Bearer'], 201);
+        return response()->json(['access_token' => $token], 201);
     }
 
     /**
-     * Login a user and return a token.
+     * Log in a user.
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
      */
     public function login(Request $request)
     {
-        $request->validate([
+        $validator = Validator::make($request->all(), [
             'email' => 'required|string|email',
             'password' => 'required|string',
         ]);
 
-        $user = User::where('email', $request->email)->first();
-
-        if (! $user || ! Hash::check($request->password, $user->password)) {
-            throw ValidationException::withMessages([
-                'email' => ['The provided credentials are incorrect.'],
-            ]);
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
         }
 
-        $token = $user->createToken('auth_token')->plainTextToken;
+        $credentials = $request->only('email', 'password');
 
-        return response()->json(['access_token' => $token, 'token_type' => 'Bearer']);
+        if (!Auth::attempt($credentials)) {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
+
+        $user = Auth::user();
+        $token = $user->createToken('Personal Access Token')->plainTextToken;
+
+        return response()->json(['access_token' => $token]);
     }
 
     /**
-     * Logout the authenticated user and revoke their tokens.
+     * Log out a user.
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
      */
     public function logout(Request $request)
     {
-        $request->user()->tokens()->delete();
+        $user = $request->user();
+        $user->tokens()->delete();
 
-        return response()->json(['message' => 'Successfully logged out']);
+        return response()->json(['message' => 'Logged out successfully']);
     }
 }
